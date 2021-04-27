@@ -1,0 +1,84 @@
+<div id="app"></div>
+
+<script>
+  function Vue(options) {
+    // 响应式
+    this.$options = options
+    this.$data = options.data()
+    observe(this.$data)
+
+  }
+  Vue.prototype.$mount = function (sel) {
+    this.update = function () {
+      console.log('vue update');
+      if (!this.isMounted) {
+        // init
+        const child = this.$options.render.call(this)
+        const parent = document.querySelector(sel)
+        parent.appendChild(child)
+
+        this.isMounted = true
+        if (this.$options.mounted) {
+          this.$options.mounted.call(this)
+        }
+      } else {
+        // update
+        const child = this.$options.render.call(this)
+        const parent = document.querySelector(sel)
+        parent.innerHTML = ''
+        parent.appendChild(child)
+      }
+    }
+
+    this.update()
+
+  }
+
+  Vue.prototype.$createElement = function (tag, props, children) {
+    return { tag, props, children }
+  }
+
+  function observe(obj) {
+    Object.keys(obj).forEach(key => {
+      defineReactive(obj, key, obj[key])
+    })
+  }
+  function defineReactive(obj, key, val) {
+    Object.defineProperty(obj, key, {
+      get() {
+        console.log('get', key);
+        return val
+      },
+      set(newVal) {
+        if (newVal !== val) {
+          console.log('set', key);
+          val = newVal
+          console.log('do update', app.update());
+        }
+      }
+    })
+  }
+</script>
+<script>
+  // 需求：
+  // 1.有个title标题，想要显示在h3标签中
+  // 2.2秒后title会变化
+  const app = new Vue({
+    data() {
+      return {
+        title: '我就是个标题'
+      }
+    },
+    mounted() {
+      setTimeout(() => {
+        this.$data.title = '我还是那个标题，但我变了'
+      }, 2000);
+    },
+    render() {
+      const h3 = document.createElement('h3')
+      h3.textContent = this.$data.title
+      return h3
+    }
+  })
+  app.$mount('#app')
+</script>
