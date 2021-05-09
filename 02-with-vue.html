@@ -1,22 +1,16 @@
-<div id="app">
-  <h3>{{title}}</h3>
-</div>
+<div id="app"></div>
 
-<script src="http://unpkg.com/vue"></script>
 <script>
   // 需求：
-  // 1.有个title标题，想要显示在h3标签中
+  // 1.有title标题，显示在h3中
   // 2.2秒后title会变化
-  new Vue({
-    data() {
-      return {
-        title: '我就是个标题'
-      }
-    },
-    mounted() {
-      setTimeout(() => {
-        this.title = '我还是那个标题，但我变了'
-      }, 2000);
-    },
-  }).$mount('#app')
+  const title = '我就是一个标题'
+  const h3 = document.createElement('h3')
+  h3.textContent = title
+  app.appendChild(h3)
+
+
+  setTimeout(() => {
+    h3.textContent = '我还是那个标题，但我变了'
+  }, 1000)
 </script>

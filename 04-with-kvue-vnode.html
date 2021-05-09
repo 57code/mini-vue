@@ -2,19 +2,24 @@
 
 <script>
   function Vue(options) {
-    // 响应式
+    // 1.响应式处理
     this.$options = options
     this.$data = options.data()
     observe(this.$data)
-
   }
-  Vue.prototype.$mount = function (sel) {
-    this.update = function () {
-      console.log('vue update');
+
+  Vue.prototype.$mount = function(sel) {
+    // 获得渲染之后dom，追加到宿主元素
+    // 创建一个更新函数
+    this.update = function() {
+      
+      // 渲染子节点
+      const child = this.$options.render.call(this)
+      const parent = document.querySelector(sel)
+      
       if (!this.isMounted) {
+        // 首次执行，执行挂载
         // init
-        const child = this.$options.render.call(this)
-        const parent = document.querySelector(sel)
         parent.appendChild(child)
 
         this.isMounted = true
@@ -23,26 +28,22 @@
         }
       } else {
         // update
-        const child = this.$options.render.call(this)
-        const parent = document.querySelector(sel)
+        // 以后执行更新
         parent.innerHTML = ''
         parent.appendChild(child)
       }
+
     }
 
     this.update()
-
   }
 
-  Vue.prototype.$createElement = function (tag, props, children) {
-    return { tag, props, children }
-  }
-
+  // 拦截对象属性
   function observe(obj) {
-    Object.keys(obj).forEach(key => {
-      defineReactive(obj, key, obj[key])
-    })
+    // 遍历obj每一个key，定义拦截
+    Object.keys(obj).forEach(key => defineReactive(obj, key, obj[key]))
   }
+  // 定义响应式
   function defineReactive(obj, key, val) {
     Object.defineProperty(obj, key, {
       get() {
@@ -53,32 +54,35 @@
         if (newVal !== val) {
           console.log('set', key);
           val = newVal
-          console.log('do update', app.update());
+          // update
+          kvue.update()
         }
-      }
+      },
     })
   }
 </script>
 <script>
   // 需求：
-  // 1.有个title标题，想要显示在h3标签中
+  // 1.有title标题，显示在h3中
   // 2.2秒后title会变化
-  const app = new Vue({
+  const kvue = new Vue({
     data() {
       return {
-        title: '我就是个标题'
+        title: '我就是一个标题'
       }
     },
     mounted() {
       setTimeout(() => {
+        // data driven
         this.$data.title = '我还是那个标题，但我变了'
-      }, 2000);
+      }, 1000)
     },
     render() {
+      // 描述dom结构
       const h3 = document.createElement('h3')
       h3.textContent = this.$data.title
       return h3
     }
   })
-  app.$mount('#app')
+  kvue.$mount('#app')
 </script>

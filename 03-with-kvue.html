@@ -2,20 +2,24 @@
 
 <script>
   function Vue(options) {
-    // 响应式
+    // 1.响应式处理
     this.$options = options
     this.$data = options.data()
     observe(this.$data)
-
   }
+
   Vue.prototype.$mount = function (sel) {
+    // 获得渲染之后dom，追加到宿主元素
+    // 创建一个更新函数
     this.update = function () {
-      console.log('vue update');
+
+      // 获取vnode
       const vnode = this.$options.render.call(this, this.createElement)
 
       if (!this.isMounted) {
-        // init
+        // 首次执行，执行挂载
         const parent = document.querySelector(sel)
+        // init
         this.patch(parent, vnode)
 
         this.isMounted = true
@@ -24,32 +28,36 @@
         }
       } else {
         // update
+        // 以后执行更新, diff
         this.patch(this._vnode, vnode)
       }
-
       this._vnode = vnode
     }
 
     this.update()
-
   }
 
   Vue.prototype.createElement = function (tag, props, children) {
     return { tag, props, children }
   }
 
-  Vue.prototype.patch = function (n1, n2) {
+  // n1是宿主元素或者上次vnode
+  // n2是最新渲染vnode
+  Vue.prototype.patch = function(n1, n2) {
     if (n1.nodeType) {
       // init
       const child = this.createElm(n2)
       n1.appendChild(child)
       n2.$el = child
     } else {
-      // 获取待操作dom
+      // update
+      // 获取要操作的dom
       const el = n2.$el = n1.$el
-      // props update
-      // children update
-      if (n1.tag === n2.tag) { // 是否相同节点，节点复用
+      // props
+      // children
+      // 节点复用：key tag
+      if (n1.tag === n2.tag) {
+        // update
         if (typeof n1.children === 'string') {
           if (typeof n2.children === 'string') {
             // text update
@@ -63,27 +71,25 @@
           if (typeof n2.children === 'string') {
             // replace elements with text
           } else {
-            // update children
+            // update Children
+            
           }
         }
       } else {
         // replace
       }
     }
-
-
-
   }
-
+  
+  // vnode => dom
   Vue.prototype.createElm = function (vnode) {
-    const { tag, props, children } = vnode
+    const {tag, props, children} = vnode
     const el = document.createElement(tag)
 
     // props
     // children
     if (Array.isArray(children)) {
-      // element
-      children.forEach(child => el.appendChild(createElm(children)))
+      // elements
     } else {
       // text
       el.textContent = children
@@ -92,12 +98,13 @@
     vnode.$el = el
     return el
   }
-
+  
+  // 拦截对象属性
   function observe(obj) {
-    Object.keys(obj).forEach(key => {
-      defineReactive(obj, key, obj[key])
-    })
+    // 遍历obj每一个key，定义拦截
+    Object.keys(obj).forEach(key => defineReactive(obj, key, obj[key]))
   }
+  // 定义响应式
   function defineReactive(obj, key, val) {
     Object.defineProperty(obj, key, {
       get() {
@@ -108,30 +115,33 @@
         if (newVal !== val) {
           console.log('set', key);
           val = newVal
-          console.log('do update', app.update());
+          // update
+          kvue.update()
         }
-      }
+      },
     })
   }
 </script>
 <script>
   // 需求：
-  // 1.有个title标题，想要显示在h3标签中
+  // 1.有title标题，显示在h3中
   // 2.2秒后title会变化
-  const app = new Vue({
+  const kvue = new Vue({
     data() {
       return {
-        title: '我就是个标题'
+        title: '我就是一个标题'
       }
     },
     mounted() {
       setTimeout(() => {
+        // data driven
         this.$data.title = '我还是那个标题，但我变了'
-      }, 2000);
+      }, 1000)
     },
     render(h) {
+      // 返回vnode
       return h('h3', null, this.$data.title)
     }
   })
-  app.$mount('#app')
+  kvue.$mount('#app')
 </script>
