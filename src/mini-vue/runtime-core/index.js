@@ -1,8 +1,28 @@
+import { effect, reactive } from "../reactivity/index";
+
 export function createRenderer(options) {
   const render = (rootComponent, selector) => {
-    const parent = options.querySelector(selector);
-    const el = rootComponent.render.call(rootComponent.data());
-    options.insert(el, parent);
+    const container = options.querySelector(selector);
+    // 对data做响应式处理
+    const observed = reactive(rootComponent.data());
+
+    // 为组件定义一个更新函数
+    const componentUpdateFn = () => {
+      const el = rootComponent.render.call(observed);
+      options.setElementText(container, '')
+      options.insert(el, container);
+    };
+
+    // 指定活动的副作用为该更新函数
+    effect(componentUpdateFn);
+
+    // 初始化执行一次
+    componentUpdateFn();
+
+    // mount
+    if (rootComponent.mounted) {
+      rootComponent.mounted.call(observed)
+    }
   };
 
   return {
