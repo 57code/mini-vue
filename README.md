@@ -1,7 +1,120 @@
-# Vue 3 + Vite
+> 小羊们好，这是村长的私教课程《手写Vue全家桶》产出的代码，想要深入学习Vue全家桶原理的小伙伴可以加我vx：kkb_cunzhang。
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+## Vue设计思路
+前面我们通读了Vue3源码，但是仅仅读一遍是远远不够的。本模块我们想要手写自己的Vue，要知道看明白和做出来完全是两回事。只有理解并复写出来才能做到融会贯通！我们开写之前首先要琢磨一下Vue3设计理念，这样写的时候才能更有思路：
+- 声明式 declarative
+- 数据驱动data-driven
+- 渐进式progressive
 
-## Recommended IDE Setup
 
-- [VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar)
+
+## Vue要解决哪些问题
+
+那么我们首先想一下Vue到底想要解决什么问题？
+
+- 易用、灵活和高效
+- 提高复用性、可维护性
+- 可扩展、跨平台
+
+
+
+## 易用、灵活和高效
+
+在Vue/React之前处于统治性地位的前端库是jQuery，它帮助我们解决了兼容性问题，可以非常方便的写出兼容性很好的代码，但是我们大量工作都花在dom操作上，据说至少达到工作量70%以上。有过体验的小伙伴就会明白，Vue在这方面可以拯救我们于水火之中，我们很少会编写dom操作代码，甚至新一代前端程序员很多都不会写原生dom代码。
+
+Vue是怎么做到这一点的哪？首先是**`声明式地描述UI`**：
+
+```Vue
+<div id="d1" :title="title" @click="handler">{{text}}</div>
+```
+
+上面这段代码起到了如下作用：
+
+- 设置div#d1的title属性
+- 添加了一个点击事件
+- 设置了#d1的textContent
+
+如果使用jQuery，我们在得到数据之后，就需要做dom操作完成这三件事。同时我们需要关心数据可能发生变化，变了之后还要再次执行刚才的三个操作。而在Vue中，这些发生在后台，数据变化有`响应式`，视图更新会自动进行。我们只需要描述一次视图，管理好我们的数据即可，这就是`数据驱动`。
+
+所以，如果我们要实现自己的`mini-vue`，就要实现以下几点：
+
+- 声明式描述UI
+- 数据响应式
+- 自动更新视图
+
+在Vue中编译器模块（compiler-xxx）、响应式模块（reactivity）、运行时模块（runtime-xxx）实现了上面的功能需求。编译器模块比较复杂，且不是mvp版本中必备的模块，所以我们会暂时略过。
+
+
+
+## 提高复用性、可维护性
+
+我以前编写的jQuery代码通常面相过程，拆分复用逻辑变得困难。在Vue中，有个先天优势就是“组件”，通过组件可以隔离出独立的视图和业务逻辑，这就提高了代码复用性、可维护性。
+
+另外，Vue还提供了`mixin`、`Composition API`这样的逻辑复用机制，使我们从一开始就能很容易的编写出高复用性代码。
+
+所以，如果我们想要提升我们的`mini-vue`，就要实现以下几点：
+
+- 实现组件机制
+- 实现mixin机制或者Composition API
+
+当然，既然是改善，这部分我们就作为2.0目标😸
+
+
+
+## 可扩展、跨平台
+
+Vue3中提出一个新概念叫做“`渲染器`”，对应的API叫做“`custom renderer`”。它的主要作用就是给第三方开发者提供不同平台上扩展Vue的能力。Vue作为Web框架自带了Dom平台实现，也就是大家在源码中看到的`runtime-dom`模块。
+
+如果简单理解“渲染器”就是“一台能够将组件转换为真实DOM的机器”，它内部经历了如下过程：
+
+`组件` => `虚拟DOM` => `渲染器renderer` => `真实DOM`
+
+所以，如果我们想要使我们`mini-vue`跨平台，就需要实现一个`renderer`。
+
+
+
+## 思路
+
+mini-vue v0.1应该是最小MVP，能按照Vue3相似API显示传入根组件数据并显示内容即可，所以一开始，不考虑虚拟dom，不考虑模板，不考虑更新：
+
+- createApp()创建App实例，提供mount()做初始化
+- 提供render函数描述视图，直接做dom操作
+
+
+
+mini-vue v0.2引入渲染器，能够将dom操作从核心代码中抽离
+
+- createRenderer创建Renderer实例
+- 提供createApp方法
+- 提供render方法
+
+
+
+mini-vue v0.3引入更新机制，能够实现数据响应式，能够将组件更新函数和数据建立关联
+
+- 提供reactive()实现数据的响应式
+- 提供ReactiveEffect类建立依赖关系
+
+
+
+mini-vue v0.4引入虚拟dom，能够创建vnode，转换vnode为dom
+
+- 提供createVnode方法
+- 提供patch方法
+
+
+
+## 模块结构
+
+- 主模块-minivue，对外暴露公共API
+- 浏览器运行时模块-runtime-dom，实现各种dom操作
+- 通用运行时模块-runtime-core，实现渲染器
+- 响应式模块-reactivity，实现响应式
+
+
+
+## 后续
+
+- 引入异步更新机制
+- 引入组件机制
+- 等等
